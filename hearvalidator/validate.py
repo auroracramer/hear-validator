@@ -123,6 +123,23 @@ class ValidateModel:
                 f"Must be one of {self.ACCEPTABLE_SAMPLE_RATE}"
             )
 
+    def check_sample_rate(self):
+        print("Checking model number of input channels")
+        if not hasattr(self.model, "num_channels"):
+            raise ModelError(
+                "Model must expose expected number of input audio channels as an attribute."
+            )
+
+        if not isinstance(self.model.num_channels, int):
+            raise ModelError("Model.num_channels must be an int")
+
+        print(f"  - Model number of input channels is: {self.model.num_channels}")
+        if self.model.num_channels <= 0:
+            raise ModelError(
+                f"Number of input channels of {self.model.num_channels} is invalid. "
+                f"Must be positive"
+            )
+
     def check_embedding_size(self):
         print("Checking model embedding size")
         if not hasattr(self.model, "scene_embedding_size"):
@@ -323,7 +340,7 @@ class ValidateModel:
     ) -> Tuple[np.ndarray, np.ndarray]:
         # Create a batch of test audio (white noise)
         audio_batch = torch.rand(
-            (num_audio, int(length * self.model.sample_rate)), device=self.device
+            (num_audio, self.model.num_channels, int(length * self.model.sample_rate),), device=self.device
         )
 
         # Audio samples [-1.0, 1.0]
@@ -350,7 +367,7 @@ class ValidateModel:
     ) -> Tuple[np.ndarray, np.array]:
         # Create a batch of test audio (white noise)
         audio_batch = tf.random.uniform(
-            (num_audio, int(length * self.model.sample_rate))
+            (num_audio, self.model.num_channels, int(length * self.model.sample_rate))
         )
 
         # Audio samples [-1.0, 1.0]
@@ -375,7 +392,7 @@ class ValidateModel:
     def torch_scene_embeddings(self, num_audio: int, length: float) -> np.ndarray:
         # Create a batch of test audio (white noise)
         audio_batch = torch.rand(
-            (num_audio, int(length * self.model.sample_rate)), device=self.device
+            (num_audio, self.model.num_channels, int(length * self.model.sample_rate)), device=self.device
         )
 
         # Audio samples [-1.0, 1.0]
@@ -400,7 +417,7 @@ class ValidateModel:
         num_audio = 4
         length = 2.74
         audio_batch = tf.random.uniform(
-            (num_audio, int(length * self.model.sample_rate))
+            (num_audio, self.model.num_channels, int(length * self.model.sample_rate))
         )
 
         # Audio samples [-1.0, 1.0]
